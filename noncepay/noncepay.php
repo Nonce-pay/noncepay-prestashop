@@ -184,7 +184,7 @@ class Noncepay extends PaymentModule
             if (is_array($response) && isset($response['success_token'])) {
                 $response['success_token'] = '(hidden)';
             }
-            $shop->log(['request' => $action, 'response' => is_array($response) ? json_encode($response) : substr((string) $response, 0, 500)], 'API call', (int) $order->id);
+            $shop->log(['request' => $action, 'response' => is_array($response) ? $response : substr((string) $response, 0, 500)], 'API call', (int) $order->id);
         };
         $checkout = new Checkout($settings, new DbStore(), new Api($settings->apiBase, null, $logger), $shop, time());
         return $checkout->paymentUrl((int) $order->id, [

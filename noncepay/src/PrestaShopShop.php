@@ -88,12 +88,8 @@ final class PrestaShopShop implements Shop
 
     public function log(array $data, string $status, int $orderId = 0): void
     {
-        $parts = [];
-        foreach ($data as $key => $value) {
-            $parts[] = $key . '=' . (is_array($value) ? json_encode($value) : (string) $value);
-        }
-        // PrestaShopLogger refuses a message containing < > { }.
-        $message = str_replace(['<', '>', '{', '}'], ['', '', '(', ')'], 'NoncePay: ' . $status . ' | ' . implode('; ', $parts));
+        // PrestaShopLogger refuses a message containing < > { }, and 1.7 escapes quotes twice.
+        $message = str_replace(['<', '>', '{', '}', '"'], ['', '', '(', ')', ''], 'NoncePay: ' . $status . ' | ' . self::flatten($data, '; '));
         $severity = 1;
         if (strpos($status, 'review manually') !== false || strpos($status, 'Error') === 0) {
             $severity = 3;
@@ -101,6 +97,15 @@ final class PrestaShopShop implements Shop
             $severity = 2;
         }
         \PrestaShopLogger::addLog($message, $severity, null, $orderId > 0 ? 'Order' : null, $orderId > 0 ? $orderId : null, true);
+    }
+
+    private static function flatten(array $data, string $separator): string
+    {
+        $parts = [];
+        foreach ($data as $key => $value) {
+            $parts[] = $key . '=' . (is_array($value) ? '(' . self::flatten($value, ', ') . ')' : (string) $value);
+        }
+        return implode($separator, $parts);
     }
 
     public function lock(string $name): bool
