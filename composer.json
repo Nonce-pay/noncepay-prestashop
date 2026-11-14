@@ -1,0 +1,23 @@
+{
+    "name": "noncepay/noncepay-prestashop",
+    "description": "NoncePay crypto payment module for PrestaShop",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NoncePay\\PrestaShop\\": "noncepay/src/",
+            "NoncePay\\PrestaShop\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "7.4.33"
+        }
+    }
+}
