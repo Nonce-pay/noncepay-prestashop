@@ -40,6 +40,7 @@ final class PrestaShopShop implements Shop
             WHERE `reference` = '" . pSQL($order->reference) . "'", false);
         $currency = new \Currency((int) $order->id_currency);
         $state = new \OrderState((int) $order->current_state, (int) \Configuration::get('PS_LANG_DEFAULT'));
+
         return [
             'reference' => (string) $order->reference,
             'total' => (string) $total,
@@ -63,12 +64,13 @@ final class PrestaShopShop implements Shop
         }
         if (!$this->transactionExists($transactionId)) {
             $currency = new \Currency((int) $order->id_currency);
-            if (!$order->addOrderPayment((float) $amount, $this->paymentMethod, $transactionId, $currency)) {
+            if (!$order->addOrderPayment($amount, $this->paymentMethod, $transactionId, $currency)) {
                 return false;
             }
         }
         $paid = (int) \Configuration::get('PS_OS_PAYMENT');
         foreach (\Order::getByReference($order->reference) as $sibling) {
+            /** @var \Order $sibling */
             if ((int) $sibling->current_state !== $this->awaitingState) {
                 continue;
             }
@@ -83,6 +85,7 @@ final class PrestaShopShop implements Shop
             // As addWithemail(), but a mail that cannot be sent does not fail the recorded payment.
             $history->sendEmail(new \Order((int) $sibling->id));
         }
+
         return true;
     }
 
@@ -105,6 +108,7 @@ final class PrestaShopShop implements Shop
         foreach ($data as $key => $value) {
             $parts[] = $key . '=' . (is_array($value) ? '(' . self::flatten($value, ', ') . ')' : (string) $value);
         }
+
         return implode($separator, $parts);
     }
 

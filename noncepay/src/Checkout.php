@@ -18,10 +18,10 @@ if (!defined('_PS_VERSION_')) {
  */
 final class Checkout
 {
-    const LINK_DAYS = 7;
+    public const LINK_DAYS = 7;
     // A stored link is reused only while it has at least this long left to be paid.
-    const REUSE_MARGIN = 3600;
-    const MAX_DESCRIPTION = 128;
+    public const REUSE_MARGIN = 3600;
+    public const MAX_DESCRIPTION = 128;
 
     /** @var Settings */
     private $settings;
@@ -94,6 +94,7 @@ final class Checkout
             'status' => 'open',
             'created_at' => $this->now,
         ]);
+
         return $link['payment_url'];
     }
 
@@ -124,6 +125,7 @@ final class Checkout
         if (!Decimal::isZero($this->settings->tolerance)) {
             $query['tolerance'] = $this->settings->tolerance;
         }
+
         return $query;
     }
 
@@ -134,6 +136,7 @@ final class Checkout
             return false;
         }
         $row = $this->store->findLink($linkId);
+
         return $row !== null && (int) $row['id_order'] === $orderId && hash_equals((string) $row['success_token'], $token);
     }
 }

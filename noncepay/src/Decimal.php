@@ -21,7 +21,7 @@ if (!defined('_PS_VERSION_')) {
 final class Decimal
 {
     /** @var bool|null Null means auto-detect; tests force either path. */
-    public static $useBcmath = null;
+    public static $useBcmath;
 
     /**
      * Normalized decimal string, or null when the input is not a plain non-negative decimal.
@@ -40,6 +40,7 @@ final class Decimal
         if (strlen($value) > 80 || !preg_match('/^\d+(\.\d+)?$/', $value)) {
             return null;
         }
+
         return self::normalize($value);
     }
 
@@ -57,6 +58,7 @@ final class Decimal
         if (self::bcmath()) {
             return self::normalize(bcsub($a, $b, $scale));
         }
+
         return self::fromInt(self::intSub(self::toInt($a, $scale), self::toInt($b, $scale)), $scale);
     }
 
@@ -66,6 +68,7 @@ final class Decimal
         if (self::bcmath()) {
             return self::normalize(bcmul($a, $b, $scale));
         }
+
         return self::fromInt(self::intMul(self::toInt($a, self::scale($a)), self::toInt($b, self::scale($b))), $scale);
     }
 
@@ -75,6 +78,7 @@ final class Decimal
         if (self::bcmath()) {
             return bccomp($a, $b, $scale);
         }
+
         return self::intCmp(self::toInt($a, $scale), self::toInt($b, $scale));
     }
 
@@ -89,6 +93,7 @@ final class Decimal
     public static function covers(string $received, string $expected, string $tolerancePercent): bool
     {
         $share = self::sub('100', $tolerancePercent);
+
         return self::cmp(self::mul($received, '100'), self::mul($expected, $share)) >= 0;
     }
 
@@ -98,18 +103,21 @@ final class Decimal
         $int = ltrim($parts[0], '0');
         $frac = isset($parts[1]) ? rtrim($parts[1], '0') : '';
         $int = $int === '' ? '0' : $int;
+
         return $frac === '' ? $int : $int . '.' . $frac;
     }
 
     private static function scale(string $value): int
     {
         $pos = strpos($value, '.');
+
         return $pos === false ? 0 : strlen($value) - $pos - 1;
     }
 
     private static function bcmath(): bool
     {
         $available = function_exists('bcadd');
+
         return self::$useBcmath === null ? $available : (self::$useBcmath && $available);
     }
 
@@ -118,6 +126,7 @@ final class Decimal
         $parts = explode('.', $value, 2);
         $frac = isset($parts[1]) ? $parts[1] : '';
         $int = ltrim($parts[0] . str_pad($frac, $scale, '0'), '0');
+
         return $int === '' ? '0' : $int;
     }
 
@@ -127,6 +136,7 @@ final class Decimal
             return self::normalize($int);
         }
         $int = str_pad($int, $scale + 1, '0', STR_PAD_LEFT);
+
         return self::normalize(substr($int, 0, -$scale) . '.' . substr($int, -$scale));
     }
 
@@ -138,6 +148,7 @@ final class Decimal
             return strlen($a) < strlen($b) ? -1 : 1;
         }
         $cmp = strcmp($a, $b);
+
         return $cmp < 0 ? -1 : ($cmp > 0 ? 1 : 0);
     }
 
@@ -147,12 +158,13 @@ final class Decimal
         $b = str_pad($b, $len, '0', STR_PAD_LEFT);
         $borrow = 0;
         $result = '';
-        for ($i = $len - 1; $i >= 0; $i--) {
+        for ($i = $len - 1; $i >= 0; --$i) {
             $diff = (int) $a[$i] - (int) $b[$i] - $borrow;
             $borrow = $diff < 0 ? 1 : 0;
             $result = ($diff + 10 * $borrow) . $result;
         }
         $result = ltrim($result, '0');
+
         return $result === '' ? '0' : $result;
     }
 
@@ -161,14 +173,15 @@ final class Decimal
         $la = strlen($a);
         $lb = strlen($b);
         $digits = array_fill(0, $la + $lb, 0);
-        for ($i = $la - 1; $i >= 0; $i--) {
-            for ($j = $lb - 1; $j >= 0; $j--) {
+        for ($i = $la - 1; $i >= 0; --$i) {
+            for ($j = $lb - 1; $j >= 0; --$j) {
                 $sum = (int) $a[$i] * (int) $b[$j] + $digits[$i + $j + 1];
                 $digits[$i + $j + 1] = $sum % 10;
                 $digits[$i + $j] += intdiv($sum, 10);
             }
         }
         $result = ltrim(implode('', $digits), '0');
+
         return $result === '' ? '0' : $result;
     }
 }

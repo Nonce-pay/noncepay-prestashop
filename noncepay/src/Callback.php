@@ -21,7 +21,7 @@ if (!defined('_PS_VERSION_')) {
  */
 final class Callback
 {
-    const OK = [200, '*ok*'];
+    public const OK = [200, '*ok*'];
 
     /** @var Store */
     private $store;
@@ -41,18 +41,20 @@ final class Callback
     }
 
     /**
-     * @return array{0:int,1:string} HTTP status and body.
+     * @return array{0:int,1:string} HTTP status and body
      */
     public function handle(string $body, string $signature, array $query): array
     {
         if (!$this->key->verify($body, $signature)) {
             $this->shop->log(['query' => self::scalars($query), 'signature' => $signature === '' ? 'missing' : 'invalid'], 'Invalid signature');
+
             return [401, 'Bad signature'];
         }
 
         $fields = json_decode($body, true);
         if (!is_array($fields)) {
             $this->shop->log(['query' => self::scalars($query), 'body' => substr($body, 0, 500)], 'Unreadable callback');
+
             return self::OK;
         }
         $fields = self::scalars($fields);
@@ -60,6 +62,7 @@ final class Callback
         if (($fields['type'] ?? '') !== 'payment') {
             $orderId = (int) ($query['id_order'] ?? 0);
             $this->shop->log($fields, 'Deposit notification', $orderId);
+
             return self::OK;
         }
 
@@ -67,6 +70,7 @@ final class Callback
         $row = preg_match('/^[A-Za-z0-9-]{1,64}$/', $linkId) ? $this->store->findLink($linkId) : null;
         if ($row === null || ($fields['is_paid'] ?? '') !== '1') {
             $this->shop->log($fields, 'Unknown link, ignored');
+
             return self::OK;
         }
 
@@ -78,6 +82,7 @@ final class Callback
             return $this->settle($row, $fields, $orderId);
         } catch (\Throwable $e) {
             $this->shop->log(array_merge($fields, ['error' => $e->getMessage()]), 'Error, NoncePay will retry', $orderId);
+
             return [503, 'Error, retry later'];
         } finally {
             $this->shop->unlock('order_' . $orderId);
@@ -93,6 +98,7 @@ final class Callback
         if ($order !== null && !$order['payable'] && $this->shop->transactionExists($linkId)) {
             $this->store->markPaid($linkId, $this->now);
             $this->shop->log($fields, 'Duplicate, already recorded', $orderId);
+
             return self::OK;
         }
 
@@ -102,6 +108,7 @@ final class Callback
             && strtoupper((string) ($fields['currency'] ?? '')) === strtoupper((string) $row['currency']);
         if (!$sameLink || $paid === null || !Decimal::covers($paid, (string) $row['amount'], (string) $row['tolerance'])) {
             $this->shop->log($fields, 'Amount mismatch, review manually', $orderId);
+
             return self::OK;
         }
 
@@ -109,6 +116,7 @@ final class Callback
             $this->store->markPaid($linkId, $this->now);
             $state = $order === null ? 'a missing order' : 'an order in state "' . $order['state'] . '"';
             $this->shop->log($fields, 'Paid link on ' . $state . ', review manually', $orderId);
+
             return self::OK;
         }
 
@@ -122,6 +130,7 @@ final class Callback
             'recorded_amount' => $amount,
             'note' => 'Fee recorded as 0: the NoncePay fee is deducted from the crypto forwarded to your wallet.',
         ]), 'Success', $orderId);
+
         return self::OK;
     }
 
@@ -134,6 +143,7 @@ final class Callback
                 $out[(string) $key] = substr((string) $value, 0, 2000);
             }
         }
+
         return $out;
     }
 }

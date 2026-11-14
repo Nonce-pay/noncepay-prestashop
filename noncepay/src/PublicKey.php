@@ -21,8 +21,8 @@ if (!defined('_PS_VERSION_')) {
  */
 final class PublicKey
 {
-    const CACHE = 'pubkey';
-    const RETRY = 'pubkey_retry_after';
+    public const CACHE = 'pubkey';
+    public const RETRY = 'pubkey_retry_after';
 
     /** @var Api */
     private $api;
@@ -55,12 +55,14 @@ final class PublicKey
             return false;
         }
         $fresh = $this->key(true);
+
         return $fresh !== '' && $fresh !== $key && self::check($data, $raw, $fresh);
     }
 
     private static function check(string $data, string $raw, string $pem): bool
     {
         $key = openssl_pkey_get_public($pem);
+
         return $key !== false && openssl_verify($data, $raw, $key, OPENSSL_ALGO_SHA256) === 1;
     }
 
@@ -82,9 +84,11 @@ final class PublicKey
             $fresh = $this->api->publicKey();
         } catch (ApiException $e) {
             $this->store->setValue(self::RETRY, (string) ($now + 900));
+
             return $pem;
         }
         $this->store->setValue(self::CACHE, json_encode(['pem' => $fresh, 'fetched_at' => $now]));
+
         return $fresh;
     }
 }

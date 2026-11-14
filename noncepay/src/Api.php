@@ -18,13 +18,13 @@ if (!defined('_PS_VERSION_')) {
  */
 final class Api
 {
-    const VERSION = '0.1.0';
+    public const VERSION = '0.1.1';
 
     /** @var string */
     private $base;
     /** @var callable(string): array{0:int,1:string} */
     private $transport;
-    /** @var callable|null fn(string $action, string $url, $response) for the PrestaShop log */
+    /** @var callable|null fn(string, string,) for the PrestaShop log */
     private $logger;
 
     public function __construct(string $base, ?callable $transport = null, ?callable $logger = null)
@@ -36,6 +36,7 @@ final class Api
 
     /**
      * @return array{link_id:string,payment_url:string,success_token:string}
+     *
      * @throws ApiException
      */
     public function createLink(array $query): array
@@ -49,6 +50,7 @@ final class Api
         if (!preg_match('/^[A-Za-z0-9-]{1,64}$/', $body['link_id']) || strpos($body['payment_url'], 'https://') !== 0) {
             throw new ApiException('NoncePay answered /link/create/ with an unexpected link');
         }
+
         return $body;
     }
 
@@ -56,6 +58,7 @@ final class Api
     public function linkStatus(string $linkId): string
     {
         $body = $this->get('/link/' . rawurlencode($linkId) . '/');
+
         return isset($body['link_status']) && is_string($body['link_status']) ? $body['link_status'] : '';
     }
 
@@ -66,6 +69,7 @@ final class Api
         if (empty($body['pubkey']) || !is_string($body['pubkey'])) {
             throw new ApiException('NoncePay answered /pubkey/ without a key');
         }
+
         return $body['pubkey'];
     }
 
@@ -88,11 +92,12 @@ final class Api
             $message = isset($body['error']) && is_string($body['error']) ? $body['error'] : 'HTTP ' . $code;
             throw new ApiException(sprintf('NoncePay API %s error (HTTP %d): %s', $path, $code, $message));
         }
+
         return $body;
     }
 
     /**
-     * @return array{0:int,1:string} HTTP status (0 when unreachable) and body (or the error).
+     * @return array{0:int,1:string} HTTP status (0 when unreachable) and body (or the error)
      */
     public static function curlGet(string $url): array
     {
@@ -113,6 +118,7 @@ final class Api
         if ($body === false) {
             return [0, $error];
         }
+
         return [$code, (string) $body];
     }
 }

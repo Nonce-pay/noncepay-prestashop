@@ -62,6 +62,7 @@ class NoncepayValidationModuleFrontController extends ModuleFrontController
             || !hash_equals((string) $order->secure_key, (string) Tools::getValue('key'))) {
             Tools::redirect('index.php');
         }
+
         return $order;
     }
 
@@ -82,6 +83,7 @@ class NoncepayValidationModuleFrontController extends ModuleFrontController
             if (!Validate::isLoadedObject($order) || (int) $order->id_customer !== (int) $customer->id) {
                 Tools::redirect('index.php');
             }
+
             return $order;
         }
 
@@ -100,6 +102,7 @@ class NoncepayValidationModuleFrontController extends ModuleFrontController
             false,
             $customer->secure_key
         );
+
         return new Order((int) $this->module->currentOrder);
     }
 }

@@ -9,8 +9,8 @@ NoncePay hosted payment page, picks a coin, pays, and comes back to the order co
 
 ## Requirements
 
-- PrestaShop 8.x (1.7.8 also works)
-- PHP 7.4 to 8.3 with the `curl`, `json` and `openssl` extensions (`bcmath` is used when present, not required)
+- PrestaShop 1.7.8, 8.x or 9.x
+- PHP 7.4 to 8.4 with the `curl`, `json` and `openssl` extensions (`bcmath` is used when present, not required)
 - MySQL or MariaDB (the module uses `GET_LOCK` so two callbacks never record one payment twice)
 - Your store reachable over the internet and not in maintenance mode, so NoncePay can call
   `https://your-store/module/noncepay/callback` (or `index.php?fc=module&module=noncepay&controller=callback` without

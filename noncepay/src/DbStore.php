@@ -18,7 +18,7 @@ if (!defined('_PS_VERSION_')) {
  */
 final class DbStore implements Store
 {
-    const TABLE = 'noncepay_link';
+    public const TABLE = 'noncepay_link';
 
     public static function createTableSql(): string
     {
@@ -50,6 +50,7 @@ final class DbStore implements Store
             AND `status` = 'open'
             AND `expires_at` > " . (int) $validUntil . '
             ORDER BY `id_noncepay_link` DESC', false);
+
         return $row ?: null;
     }
 
@@ -57,6 +58,7 @@ final class DbStore implements Store
     {
         $row = \Db::getInstance()->getRow('SELECT * FROM `' . _DB_PREFIX_ . self::TABLE . "`
             WHERE `link_id` = '" . pSQL($linkId) . "'", false);
+
         return $row ?: null;
     }
 
@@ -82,8 +84,9 @@ final class DbStore implements Store
 
     public function getValue(string $name): ?string
     {
-        $value = \Configuration::getGlobalValue(self::key($name));
-        return $value === false || $value === null ? null : (string) $value;
+        $value = (string) \Configuration::getGlobalValue(self::key($name));
+
+        return $value === '' ? null : $value;
     }
 
     public function setValue(string $name, string $value): void

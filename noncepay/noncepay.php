@@ -6,6 +6,13 @@
  * @copyright 2026 NoncePay
  * @license   https://opensource.org/licenses/MIT MIT License
  */
+use NoncePay\PrestaShop\Api;
+use NoncePay\PrestaShop\Checkout;
+use NoncePay\PrestaShop\DbStore;
+use NoncePay\PrestaShop\PrestaShopShop;
+use NoncePay\PrestaShop\Settings;
+use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -20,19 +27,12 @@ spl_autoload_register(function ($class) {
     }
 });
 
-use NoncePay\PrestaShop\Api;
-use NoncePay\PrestaShop\Checkout;
-use NoncePay\PrestaShop\DbStore;
-use NoncePay\PrestaShop\PrestaShopShop;
-use NoncePay\PrestaShop\Settings;
-use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
-
 class Noncepay extends PaymentModule
 {
-    const OS_AWAITING = 'NONCEPAY_OS_AWAITING';
+    public const OS_AWAITING = 'NONCEPAY_OS_AWAITING';
 
     // Configuration key => setting name.
-    const FIELDS = [
+    public const FIELDS = [
         'NONCEPAY_ADDRESS_EVM' => 'address_evm',
         'NONCEPAY_ADDRESS_TRON' => 'address_tron',
         'NONCEPAY_ADDRESS_BTC' => 'address_btc',
@@ -53,7 +53,7 @@ class Noncepay extends PaymentModule
     {
         $this->name = 'noncepay';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.0';
+        $this->version = '0.1.1';
         $this->author = 'NoncePay';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '1.7.8.0', 'max' => _PS_VERSION_];
@@ -100,6 +100,7 @@ class Noncepay extends PaymentModule
         Configuration::deleteByName(self::OS_AWAITING);
         Configuration::deleteByName('NONCEPAY_CACHE_PUBKEY');
         Configuration::deleteByName('NONCEPAY_CACHE_PUBKEY_RETRY_AFTER');
+
         return parent::uninstall();
     }
 
@@ -128,6 +129,7 @@ class Noncepay extends PaymentModule
         if (!($id ? $state->update() : $state->add())) {
             return false;
         }
+
         return Configuration::updateGlobalValue(self::OS_AWAITING, (int) $state->id);
     }
 
@@ -142,6 +144,7 @@ class Noncepay extends PaymentModule
         foreach (self::FIELDS as $key => $name) {
             $params[$name] = (string) Configuration::get($key);
         }
+
         return Settings::fromParams($params, [$this, 'translateSetting']);
     }
 
@@ -168,6 +171,7 @@ class Noncepay extends PaymentModule
                 $allowed = true;
             }
         }
+
         return $allowed && Settings::currencySupported((string) $currency->iso_code) && !$this->settings()->errors;
     }
 
@@ -187,6 +191,7 @@ class Noncepay extends PaymentModule
             $shop->log(['request' => $action, 'response' => is_array($response) ? $response : substr((string) $response, 0, 500)], 'API call', (int) $order->id);
         };
         $checkout = new Checkout($settings, new DbStore(), new Api($settings->apiBase, null, $logger), $shop, time());
+
         return $checkout->paymentUrl((int) $order->id, [
             'redirect_url' => $this->confirmationUrl($order),
             'callback_url' => $this->context->link->getModuleLink($this->name, 'callback', ['id_order' => (int) $order->id], true, null, (int) $order->id_shop),
@@ -223,6 +228,7 @@ class Noncepay extends PaymentModule
             ->setCallToActionText($this->l('Pay with crypto'))
             ->setAction($this->context->link->getModuleLink($this->name, 'validation', [], true))
             ->setAdditionalInformation($this->fetch('module:noncepay/views/templates/hook/payment_option.tpl'));
+
         return [$option];
     }
 
@@ -240,6 +246,7 @@ class Noncepay extends PaymentModule
                 $status = 'confirming';
             }
         }
+
         return $this->renderStatus($order, $status);
     }
 
@@ -249,6 +256,7 @@ class Noncepay extends PaymentModule
         if (!$order instanceof Order || $order->module !== $this->name || $this->orderStatus($order) !== 'awaiting') {
             return '';
         }
+
         return $this->renderStatus($order, 'awaiting');
     }
 
@@ -257,6 +265,7 @@ class Noncepay extends PaymentModule
         if ((int) $order->current_state === $this->awaitingState()) {
             return 'awaiting';
         }
+
         return $order->hasBeenPaid() ? 'paid' : 'other';
     }
 
@@ -271,6 +280,7 @@ class Noncepay extends PaymentModule
             ),
             'noncepay_pay_url' => $this->payUrl($order),
         ]);
+
         return $this->fetch('module:noncepay/views/templates/hook/payment_status.tpl');
     }
 
@@ -404,6 +414,7 @@ class Noncepay extends PaymentModule
         $helper->submit_action = 'submitNoncepay';
         $helper->show_toolbar = false;
         $helper->tpl_vars = ['fields_value' => $values];
+
         return $helper->generateForm([$form]);
     }
 

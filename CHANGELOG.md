@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- PrestaShop 9 and PHP 8.4 supported.
+- PrestaShop Addons validator: `.htaccess` in the module root, PrestaShop coding standard.
+
 ## 0.1.0
 
 First release.

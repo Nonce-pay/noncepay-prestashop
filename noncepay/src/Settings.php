@@ -20,18 +20,18 @@ if (!defined('_PS_VERSION_')) {
  */
 final class Settings
 {
-    const DEFAULT_API = 'https://api.noncepay.app';
+    public const DEFAULT_API = 'https://api.noncepay.app';
 
-    const FAMILIES = ['evm', 'tron', 'btc', 'ltc', 'bch', 'doge', 'sol'];
+    public const FAMILIES = ['evm', 'tron', 'btc', 'ltc', 'bch', 'doge', 'sol'];
 
     // NoncePay's fiat list (app/rates/config.ts): a link can only be priced in one of these.
-    const FIAT = [
+    public const FIAT = [
         'USD', 'EUR', 'GBP', 'CAD', 'JPY', 'AED', 'MYR', 'IDR', 'THB', 'CHF', 'SGD', 'RUB', 'ZAR',
         'TRY', 'LKR', 'RON', 'BGN', 'HUF', 'CZK', 'PHP', 'PLN', 'UGX', 'MXN', 'INR', 'HKD', 'CNY',
         'BRL', 'DKK', 'TWD', 'AUD', 'NGN', 'SEK', 'NOK', 'UAH', 'VND', 'COP', 'NZD',
     ];
 
-    const MAX_MERCHANT_NAME = 64;
+    public const MAX_MERCHANT_NAME = 64;
 
     /** @var array<string,string> family => wallet */
     public $wallets = [];
@@ -142,6 +142,7 @@ final class Settings
         if ($body === '' || $body === null) {
             return '';
         }
+
         return "-----BEGIN PUBLIC KEY-----\n" . chunk_split($body, 64, "\n") . "-----END PUBLIC KEY-----\n";
     }
 
@@ -157,6 +158,7 @@ final class Settings
                 return false;
             }
         }
+
         return true;
     }
 
@@ -185,6 +187,7 @@ final class Settings
             return false;
         }
         $scheme = strtolower($parts['scheme']);
+
         return $scheme === 'https' || ($allowHttp && $scheme === 'http');
     }
 
@@ -198,6 +201,7 @@ final class Settings
         if (function_exists('mb_substr')) {
             return mb_substr($text, 0, $max, 'UTF-8');
         }
+
         return strlen($text) > $max ? substr($text, 0, $max) : $text;
     }
 }
